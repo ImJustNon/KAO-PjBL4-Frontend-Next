@@ -92,11 +92,11 @@ export default function Home() {
 					</div>
 					<div className="flex flex-col px-4 py-2 my-auto">
 						{/* <!-- Title --> */}
-						<div className="font-medium text-3xl text-center mb-14">Register Student's Info</div>
+						<div className="font-medium text-3xl text-center mb-14">{"Register Student's Info"}</div>
 						<div className="w-full flex flex-col gap-y-5 mt-5">
 							{/* <!-- Student ID --> */}
 							<div className="flex flex-col gap-2">
-								<div className="text-xl pl-3">Student's ID Number</div>
+								<div className="text-xl pl-3">{"Student's ID Number"}</div>
 								<input type="text" maxLength={11} inputMode="numeric" pattern="\d{1,11}" className="input input-bordered input-primary w-full text-center shadow-md bg-white" placeholder="Please fill student's ID number" onChange={(event) => setStudentFormData(prev =>{
 									return {
 										...prev,
