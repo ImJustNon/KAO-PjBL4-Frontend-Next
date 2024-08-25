@@ -1,113 +1,186 @@
+"use client"
 import Image from "next/image";
+import logoImg from "../assets/images/logo.png";
+import { useEffect, useState } from "react";
+import { StudentDataForm } from "@/types/studentFormData.type";
+import { ModalConfig } from "@/types/modalConfig.type";
+import axios, { AxiosResponse } from "axios";
+import { RegisterResponse } from "@/types/registerResponse.type";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleCheck, faCircleXmark, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+
 
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+	
+	const [studentFormData, setStudentFormData] = useState<StudentDataForm>({
+		studentId: "",
+		studentPrefix: "",
+		studentFirstName: "",
+		studentLastName: "",
+		studentNickName: "",
+	});
+	const [isPrefixSelectBoxOpen, setIsPrefixSelectBoxOpen] = useState<boolean>(false);
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+	const [modalConfig, setModalConfig] = useState<ModalConfig>({
+		modalIcon: "",
+		modalIconColor: "",
+		modalTitle: "",
+		modalDescription: ""
+	});
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+	async function handleSubmit(){
+		try {
+			const response: AxiosResponse<RegisterResponse, StudentDataForm> = await axios.post("https://kao-pjbl4-backend.vercel.app/api/v1/student/register", {
+				studentId: studentFormData.studentId,
+				studentPrefix: studentFormData.studentPrefix,
+				studentFirstname: studentFormData.studentFirstName,
+				studentLastname: studentFormData.studentLastName,
+				studentNickname: studentFormData.studentNickName
+			}, {
+				headers: {
+					'Content-Type': 'application/json',
+				}
+			});
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+			if(response.data.status === "FAIL"){
+				setModalConfig({
+					modalIcon: faCircleXmark,
+					modalIconColor: "#eb7171",
+					modalTitle: "Register Failed",
+					modalDescription: response.data.message
+				});
+				handleOpenModal();
+			}
+			else if(response.data.status === "OK"){
+				setModalConfig({
+					modalIcon: faCircleCheck,
+					modalIconColor: "#79eb71",
+					modalTitle: "Register Success",
+					modalDescription: ""
+				});   
+				handleOpenModal();
+			}
+		}
+		catch(e){
+			console.error(e);
+			setModalConfig({
+				modalIcon: faCircleXmark,
+				modalIconColor: "#eb7171",
+				modalTitle: "Somthing went Wrong",
+				modalDescription: e
+			});   
+			handleOpenModal(); 
+		}
+	}
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
+	function handleOpenModal(){
+		const getModalElement = document.getElementById("infoModal") as HTMLDialogElement;
+		getModalElement.showModal();
+	}
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+
+	return (
+		<>  
+			<div className="min-h-screen flex flex-col items-center">
+				
+				<div className="w-full flex flex-col grow bg-white md:max-w-md">
+					<div className="bg-[#3489eb] p-4 flex flex-row items-center justify-center gap-3 shadow-xl">
+						{/* <!-- Nav Title --> */}
+						<Image className="w-14 h-14 ml-3" src={logoImg} alt="logo img" />
+						<div className="font-medium text-lg text-white w-full text-start">Notification System of Picking-up and Dropping-off Students Via LINE Notify</div>
+					</div>
+					<div className="flex flex-col px-4 py-2 my-auto">
+						{/* <!-- Title --> */}
+						<div className="font-medium text-3xl text-center mb-14">Register Student's Info</div>
+						<div className="w-full flex flex-col gap-y-5 mt-5">
+							{/* <!-- Student ID --> */}
+							<div className="flex flex-col gap-2">
+								<div className="text-xl pl-3">Student's ID Number</div>
+								<input type="text" maxLength={11} inputMode="numeric" pattern="\d{1,11}" className="input input-bordered input-primary w-full text-center shadow-md bg-white" placeholder="Please fill student's ID number" onChange={(event) => setStudentFormData(prev =>{
+									return {
+										...prev,
+										studentId: event.target.value
+									}
+								})} />
+							</div>
+							{/* <!-- Student Firstname --> */}
+							<div className="flex flex-col gap-2">
+								<div className="text-xl pl-3">Prefix and Firstname</div>
+								<div className="grid grid-cols-3 gap-2">
+									{/* <!-- Prefix --> */}
+									<div className="col-span-1 input input-bordered input-primary w-full relative cursor-pointer group items-center flex shadow-md bg-white" onClick={() => setIsPrefixSelectBoxOpen(prev => !prev)}>
+										<span className={`text-md text-gray text-center w-full cursor-pointer mr-2 ${studentFormData.studentPrefix.length !== 0 ? "text-black" : "text-[#ababab]"}`}>{studentFormData.studentPrefix.length !== 0 ? studentFormData.studentPrefix : "Prefix"}</span><i className="fa-solid fa-chevron-down"></i>
+										<div className={`absolute flex-col top-[55px] left-0 rounded-md bg-white w-full border-2 border-solid border-[#014694] px-1 py-1 gap-1 shadow-xl ${isPrefixSelectBoxOpen ? "flex" : "hidden"}`}>
+											<div className="text-center cursor-pointer hover:bg-[#e3e3e3] active:bg-[#c4c4c4] rounded-md py-2 duration-300" onClick={() => setStudentFormData(prev => {
+												return {
+													...prev,
+													studentPrefix: "MISS"
+												}
+											})}>
+												Miss (Girl)
+											</div>
+											<div className="text-center cursor-pointer hover:bg-[#e3e3e3] active:bg-[#c4c4c4] rounded-md py-2 duration-300" onClick={() => setStudentFormData(prev => {
+												return {
+													...prev,
+													studentPrefix: "MASTER"
+												}
+											})}>
+												Master (Boy)
+											</div>
+										</div>
+									</div>
+									<input type="hidden" id="input_student_prefix" />
+									{/* <!-- Firstname --> */}
+									<input type="text" className="col-span-2 input input-bordered input-primary w-full text-center shadow-md bg-white" placeholder="Please fill student's firstname" onChange={(event) => setStudentFormData(prev =>{
+										return {
+											...prev,
+											studentFirstName: event.target.value
+										}
+									})} />
+								</div>
+							</div>
+							{/* <!-- Student Lastname --> */}
+							<div className="flex flex-col gap-2">
+								<div className="text-xl pl-3">Lastname</div>
+								<input type="text" className="input input-bordered input-primary w-full text-center shadow-md bg-white" placeholder="Please fill student's lastname" onChange={(event) => setStudentFormData(prev =>{
+									return {
+										...prev,
+										studentLastName: event.target.value
+									}
+								})} />
+							</div>
+							{/* <!-- Student Nickname --> */}
+							<div className="flex flex-col gap-2">
+								<div className="text-xl pl-3">Nickname</div>
+								<input type="text" className="input input-bordered input-primary w-full text-center shadow-md bg-white" placeholder="Please fill student's nickname" onChange={(event) => setStudentFormData(prev =>{
+									return {
+										...prev,
+										studentNickName: event.target.value
+									}
+								})} />
+							</div>
+						</div>
+						{/* <!-- Submit Button --> */}
+						<div className="text-center bg-[#0777f7] w-fit mx-auto mt-5 text-2xl px-20 py-2 text-white rounded-lg cursor-pointer hover:bg-[#64a8f5] active:bg-[#a2ccfc] duration-300 shadow-xl" onClick={() => handleSubmit()}>Register</div>
+						{/* <!-- Alert Modal --> */}
+						<dialog id="infoModal" className="modal modal-bottom md:modal-middle">
+							<div className="modal-box">
+								<div className="flex flex-col gap-2">
+									<span className="mx-auto"><FontAwesomeIcon icon={modalConfig.modalIcon as IconDefinition} size="6x" style={{ color: modalConfig.modalIconColor }}></FontAwesomeIcon></span>
+									<div className="text-3xl font-medium text-center mt-3">{modalConfig.modalTitle}</div>
+									<div className="text-xl font-medium text-center">{String(modalConfig.modalDescription)}</div>
+								</div>
+								<div className="modal-action">
+									<form method="dialog">
+										<button className="btn">Close</button>
+									</form>
+								</div>
+							</div>
+						</dialog>
+					</div>
+				</div>
+			</div>
+		</>
+	);
 }
